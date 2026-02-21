@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 40 53% 95%;
+  --foreground: 30 35% 18%;
+  --card: 45 60% 97%;
+  --card-foreground: 30 35% 18%;
+  --border: 34 35% 78%;
+  --primary: 28 54% 33%;
+  --primary-foreground: 40 60% 97%;
+  --muted: 40 30% 90%;
+  --muted-foreground: 30 18% 40%;
+  --accent: 42 44% 88%;
+  --accent-foreground: 30 35% 18%;
+  --radius: 8px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body), sans-serif;
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(255, 244, 222, 0.8) 0, transparent 42%),
+      radial-gradient(circle at 90% 80%, rgba(239, 226, 203, 0.7) 0, transparent 35%);
+    min-height: 100vh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading), serif;
+    letter-spacing: 0.01em;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-family: var(--font-body), sans-serif;
+  }
+}
+
+@layer components {
+  .paper-surface {
+    @apply border border-border/90 bg-card;
+  }
+
+  .book-cover {
+    background: linear-gradient(145deg, #c39a6b 0%, #8f6841 100%);
+  }
+}

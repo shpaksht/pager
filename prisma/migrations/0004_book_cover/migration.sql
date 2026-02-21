@@ -1,0 +1,3 @@
+ALTER TABLE "Book"
+ADD COLUMN "coverMime" TEXT,
+ADD COLUMN "coverData" BYTEA;

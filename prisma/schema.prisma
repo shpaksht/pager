@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String             @id @default(cuid())
+  login        String             @unique
+  passwordHash String
+  createdAt    DateTime           @default(now())
+  speedTests   ReadingSpeedTest[]
+  books        Book[]
+  settings     UserSettings?
+}
+
+model ReadingSpeedTest {
+  id            String   @id @default(cuid())
+  userId        String
+  textWordCount Int
+  secondsSpent  Int
+  wordsPerMin   Float
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Book {
+  id             String      @id @default(cuid())
+  userId         String
+  title          String
+  fileName       String
+  wordCount      Int
+  estimatedPages Int
+  coverMime      String?
+  coverData      Bytes?
+  createdAt      DateTime    @default(now())
+  plans          ReadingPlan[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model ReadingPlan {
+  id                String   @id @default(cuid())
+  bookId            String   @unique
+  startDate         DateTime @default(now())
+  monHours          Float    @default(0)
+  tueHours          Float    @default(0)
+  wedHours          Float    @default(0)
+  thuHours          Float    @default(0)
+  friHours          Float    @default(0)
+  satHours          Float    @default(0)
+  sunHours          Float    @default(0)
+  estimatedEndDate  DateTime?
+  finishedAt        DateTime?
+  requiredHours     Float
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+}
+
+model UserSettings {
+  id       String @id @default(cuid())
+  userId   String @unique
+  monHours Float  @default(0)
+  tueHours Float  @default(0)
+  wedHours Float  @default(0)
+  thuHours Float  @default(0)
+  friHours Float  @default(0)
+  satHours Float  @default(0)
+  sunHours Float  @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
