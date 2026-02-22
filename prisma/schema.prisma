@@ -42,10 +42,28 @@ model Book {
   coverData      Bytes?
   createdAt      DateTime    @default(now())
   plans          ReadingPlan[]
+  chapters       BookChapter[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+model BookChapter {
+  id        String   @id @default(cuid())
+  bookId    String
+  order     Int
+  title     String
+  href      String?
+  wordCount Int
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId, order])
 }
 
 model ReadingPlan {

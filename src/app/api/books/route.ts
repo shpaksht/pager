@@ -12,7 +12,16 @@ export async function GET() {
   const [books, latestTest] = await Promise.all([
     prisma.book.findMany({
       where: { userId: user.id },
-      include: { plans: true },
+      select: {
+        id: true,
+        userId: true,
+        title: true,
+        fileName: true,
+        wordCount: true,
+        estimatedPages: true,
+        createdAt: true,
+        plans: true
+      },
       orderBy: { createdAt: "desc" }
     }),
     prisma.readingSpeedTest.findFirst({

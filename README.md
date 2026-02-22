@@ -28,6 +28,7 @@ DATABASE_URL="postgresql://postgres.<project-ref>:<SUPABASE_DB_PASSWORD>@aws-<re
 DIRECT_URL="postgresql://postgres:<SUPABASE_DB_PASSWORD>@db.<project-ref>.supabase.co:5432/postgres"
 NEXT_PUBLIC_SUPABASE_URL="https://<project-ref>.supabase.co"
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="<SUPABASE_PUBLISHABLE_KEY>"
+GOOGLE_BOOKS_API_KEY="<GOOGLE_BOOKS_API_KEY>"
 ```
 
 3. Примените миграции:
@@ -51,6 +52,7 @@ npm run dev
 - `DIRECT_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `GOOGLE_BOOKS_API_KEY` (опционально, для поиска книг через Google Books)
 4. Build command оставьте стандартный `npm run build`.
 5. После первого деплоя Prisma миграции применятся командой `prisma migrate deploy` в `build`-скрипте.
 

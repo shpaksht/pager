@@ -45,6 +45,10 @@ export async function POST(
       where: {
         id,
         userId: user.id
+      },
+      select: {
+        id: true,
+        wordCount: true
       }
     }),
     prisma.readingSpeedTest.findFirst({

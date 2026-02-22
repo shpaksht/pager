@@ -20,7 +20,7 @@ const ptSerif = PT_Serif({
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${ptSerif.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${ptSerif.variable}`}>
       <body>{children}</body>
     </html>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -12,34 +13,33 @@ type CompletionStats = {
 
 type Props = {
   bookId: string;
-  startDate: string;
+  startDate: string | null;
+  hasStarted: boolean;
   estimatedEndDate: string | null;
   finishedAt: string | null;
   initialStats: CompletionStats | null;
 };
-
-function shiftDate(isoDate: string, days: number) {
-  const date = new Date(`${isoDate}T00:00:00`);
-  date.setDate(date.getDate() + days);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 function asInputDate(iso: string | null) {
   if (!iso) return "";
   return iso.slice(0, 10);
 }
 
+function todayInputDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function BookProgressPanel({
   bookId,
   startDate,
+  hasStarted,
   estimatedEndDate,
   finishedAt,
   initialStats
 }: Props) {
-  const [planStartDate, setPlanStartDate] = useState(startDate);
+  const router = useRouter();
+  const [started, setStarted] = useState(hasStarted);
+  const [planStartDate, setPlanStartDate] = useState(startDate ?? todayInputDate());
   const [estimatedEnd, setEstimatedEnd] = useState<string | null>(estimatedEndDate);
   const [finishDate, setFinishDate] = useState(asInputDate(finishedAt));
   const [stats, setStats] = useState<CompletionStats | null>(initialStats);
@@ -71,7 +71,9 @@ export function BookProgressPanel({
     }
 
     setEstimatedEnd(data.plan.estimatedEndDate || null);
+    setStarted(true);
     setSavingPlan(false);
+    router.refresh();
   }
 
   async function saveFinished(event: FormEvent) {
@@ -94,16 +96,21 @@ export function BookProgressPanel({
 
     setStats(data.stats);
     setSavingFinish(false);
+    router.refresh();
   }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Reading Dates</CardTitle>
-        <CardDescription>Start date, estimated finish date, and actual finish date in one section.</CardDescription>
+        <CardDescription>
+          {started
+            ? "Start date, estimated finish date, and actual finish date in one section."
+            : "Reading date"}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={`grid gap-3 ${started ? "sm:grid-cols-2" : "sm:grid-cols-1"}`}>
           <label className="grid gap-2 text-sm">
             Start Date
             <input
@@ -113,43 +120,43 @@ export function BookProgressPanel({
               onChange={(event) => setPlanStartDate(event.target.value)}
             />
           </label>
-          <div className="grid gap-2 text-sm">
-            <p className="text-muted-foreground">Estimated Finish Date</p>
-            <div className="flex h-10 items-center rounded-md border border-border bg-card px-3">
-              <strong>{endDateLabel}</strong>
+          {started ? (
+            <div className="grid gap-2 text-sm">
+              <p className="text-muted-foreground">Estimated Finish Date</p>
+              <div className="flex h-10 items-center rounded-md border border-border bg-card px-3">
+                <strong>{endDateLabel}</strong>
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-[auto_auto_1fr] sm:items-end">
-          <Button type="button" variant="outline" onClick={() => setPlanStartDate((prev) => shiftDate(prev, -1))}>
-            -1 day
-          </Button>
-          <Button type="button" variant="outline" onClick={() => setPlanStartDate((prev) => shiftDate(prev, 1))}>
-            +1 day
-          </Button>
-          <Button type="button" onClick={() => savePlan()} disabled={savingPlan}>
-            {savingPlan ? "Calculating..." : "Recalculate"}
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div />
+          <Button type="button" onClick={() => savePlan()} disabled={savingPlan} className="w-full sm:w-auto">
+            {savingPlan ? "Starting..." : "Start"}
           </Button>
         </div>
 
-        <div className="border-t border-border" />
-
-        <form className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end" onSubmit={saveFinished}>
-          <label className="grid gap-2 text-sm">
-            Actual Finish Date
-            <input
-              required
-              type="date"
-              className="h-10 rounded-md border border-border bg-card px-3"
-              value={finishDate}
-              onChange={(event) => setFinishDate(event.target.value)}
-            />
-          </label>
-          <Button type="submit" className="w-full" disabled={savingFinish}>
-            {savingFinish ? "Saving..." : "I finished it"}
-          </Button>
-        </form>
+        {started ? (
+          <>
+            <div className="border-t border-border" />
+            <form className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end" onSubmit={saveFinished}>
+              <label className="grid gap-2 text-sm">
+                Actual Finish Date
+                <input
+                  required
+                  type="date"
+                  className="h-10 rounded-md border border-border bg-card px-3"
+                  value={finishDate}
+                  onChange={(event) => setFinishDate(event.target.value)}
+                />
+              </label>
+              <Button type="submit" className="w-full" disabled={savingFinish}>
+                {savingFinish ? "Saving..." : "I finished it"}
+              </Button>
+            </form>
+          </>
+        ) : null}
 
         {stats && (
           <div className="grid gap-2 rounded-md border border-border bg-accent/40 p-3 text-sm">

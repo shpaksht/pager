@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, DragEvent, useMemo, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, FileText, Loader2, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,13 @@ async function safeReadJson(response: Response) {
   }
 }
 
-export function BookUpload() {
+type Props = {
+  onRequestClose?: () => void;
+  showCloseWhenDone?: boolean;
+  onUploadingChange?: (isUploading: boolean) => void;
+};
+
+export function BookUpload({ onRequestClose, showCloseWhenDone = false, onUploadingChange }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -47,6 +53,11 @@ export function BookUpload() {
 
   const completedCount = summary.success + summary.error;
   const progressPercent = summary.total > 0 ? Math.round((completedCount / summary.total) * 100) : 0;
+  const hasInProgress = summary.uploading + summary.queued > 0 || isProcessing;
+
+  useEffect(() => {
+    onUploadingChange?.(hasInProgress);
+  }, [hasInProgress, onUploadingChange]);
 
   function isEpub(file: File) {
     return file.name.toLowerCase().endsWith(".epub");
@@ -115,6 +126,21 @@ export function BookUpload() {
           : it
       )
     );
+
+    const matchedCatalog =
+      typeof data.matchedCatalog === "object" && data.matchedCatalog && "title" in data.matchedCatalog
+        ? String((data.matchedCatalog as { title: string }).title)
+        : null;
+
+    if (matchedCatalog) {
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === item.id
+            ? { ...it, status: "success", message: `Uploaded · matched: ${matchedCatalog}`, bookId }
+            : it
+        )
+      );
+    }
   }
 
   async function processQueue(newItems: UploadItem[]) {
@@ -257,6 +283,12 @@ export function BookUpload() {
           Open last uploaded book
         </Button>
       )}
+
+      {showCloseWhenDone && summary.total > 0 && !hasInProgress ? (
+        <Button type="button" className="w-full" onClick={onRequestClose}>
+          Close
+        </Button>
+      ) : null}
     </div>
   );
 }

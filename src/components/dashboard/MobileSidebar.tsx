@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import { AppLogo } from "@/components/AppLogo";
 import { DashboardSidebarContent } from "@/components/dashboard/DashboardSidebarContent";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -35,10 +37,9 @@ export function MobileSidebar({ login }: Props) {
     <>
       <div className="sticky top-0 z-30 border-b border-border bg-card/95 px-3 py-2 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Pager</p>
-            <h2 className="text-xl">Bookshelf</h2>
-          </div>
+          <Link href="/dashboard" aria-label="Open library">
+            <AppLogo className="w-[132px]" priority />
+          </Link>
           <Button variant="outline" size="icon" onClick={() => setOpen(true)} aria-label="Open menu">
             <Menu className="h-5 w-5" />
           </Button>

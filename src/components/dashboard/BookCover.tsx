@@ -8,10 +8,11 @@ import { cn } from "@/lib/utils";
 type Props = {
   title: string;
   bookId?: string;
+  coverVersion?: string;
   className?: string;
 };
 
-export function BookCover({ title, bookId, className }: Props) {
+export function BookCover({ title, bookId, coverVersion, className }: Props) {
   const [imageError, setImageError] = useState(false);
 
   const initials = title
@@ -21,7 +22,8 @@ export function BookCover({ title, bookId, className }: Props) {
     .map((word) => word[0]?.toUpperCase())
     .join("") || "BK";
 
-  const coverSrc = bookId && !imageError ? `/api/books/${bookId}/cover` : null;
+  const versionParam = coverVersion ? `?v=${encodeURIComponent(coverVersion)}` : "";
+  const coverSrc = bookId && !imageError ? `/api/books/${bookId}/cover${versionParam}` : null;
 
   return (
     <div
@@ -41,12 +43,16 @@ export function BookCover({ title, bookId, className }: Props) {
         />
       ) : null}
 
-      <div className="relative z-10">
-        <BookOpen className="h-4 w-4 opacity-85" />
-      </div>
-      <div className="relative z-10 self-start rounded bg-black/35 px-2 py-1 text-xs font-semibold tracking-wide">
-        {initials}
-      </div>
+      {!coverSrc ? (
+        <>
+          <div className="relative z-10">
+            <BookOpen className="h-4 w-4 opacity-85" />
+          </div>
+          <div className="relative z-10 self-start rounded bg-black/35 px-2 py-1 text-xs font-semibold tracking-wide">
+            {initials}
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }

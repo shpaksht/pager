@@ -10,6 +10,16 @@ type Props = {
   mode: "login" | "register";
 };
 
+async function safeReadJson(response: Response) {
+  const raw = await response.text();
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
 export function AuthForm({ mode }: Props) {
   const router = useRouter();
   const [login, setLogin] = useState("");
@@ -31,15 +41,15 @@ export function AuthForm({ mode }: Props) {
       body: JSON.stringify({ login, password })
     });
 
-    const data = await response.json();
+    const data = await safeReadJson(response);
 
     if (!response.ok) {
-      setError(data.error || "Something went wrong");
+      setError(typeof data.error === "string" ? data.error : "Something went wrong");
       setLoading(false);
       return;
     }
 
-    if (mode === "register" && data.requiresEmailConfirmation) {
+    if (mode === "register" && data.requiresEmailConfirmation === true) {
       setInfo("Account created. Please confirm your email, then sign in.");
       setLoading(false);
       return;

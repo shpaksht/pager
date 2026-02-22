@@ -31,7 +31,14 @@ export async function POST(
   }
 
   const [book, latestSpeedTest, existingPlan] = await Promise.all([
-    prisma.book.findFirst({ where: { id, userId: user.id } }),
+    prisma.book.findFirst({
+      where: { id, userId: user.id },
+      select: {
+        id: true,
+        estimatedPages: true,
+        createdAt: true
+      }
+    }),
     prisma.readingSpeedTest.findFirst({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" }

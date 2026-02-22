@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookUpload } from "@/components/BookUpload";
+import { cn } from "@/lib/utils";
 
 type Props = {
   triggerClassName?: string;
@@ -35,12 +36,13 @@ export function UploadBookModal({ triggerClassName, onTriggerClick }: Props) {
   return (
     <>
       <Button
-        className={triggerClassName}
+        className={cn("gap-2", triggerClassName)}
         onClick={() => {
           onTriggerClick?.();
           setOpen(true);
         }}
       >
+        <UploadCloud className="h-4 w-4" />
         Upload Book
       </Button>
 

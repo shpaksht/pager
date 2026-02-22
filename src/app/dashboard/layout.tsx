@@ -17,7 +17,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <div className="min-w-0">
         <MobileSidebar login={user.login} />
-        <main className="space-y-4 p-3 sm:p-5 lg:h-screen lg:overflow-y-auto lg:p-6">{children}</main>
+        <main className="p-3 sm:p-5 lg:h-screen lg:overflow-y-auto lg:p-6">
+          <div className="mx-auto w-full max-w-[1220px] space-y-4">{children}</div>
+        </main>
       </div>
     </div>
   );
