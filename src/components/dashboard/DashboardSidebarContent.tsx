@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { MouseEvent, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LibraryBig } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
 import { CatalogSearchModal } from "@/components/dashboard/CatalogSearchModal";
@@ -18,6 +18,7 @@ type Props = {
 
 export function DashboardSidebarContent({ login, onNavigate, className }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     router.prefetch("/dashboard");
@@ -25,10 +26,22 @@ export function DashboardSidebarContent({ login, onNavigate, className }: Props)
     router.prefetch("/dashboard/settings");
   }, [router]);
 
+  function navigateToLibrary(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    onNavigate?.();
+
+    if (pathname.startsWith("/dashboard/books/") && window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push("/dashboard");
+  }
+
   return (
     <div className={cn("flex h-full flex-col", className)}>
       <div className="mb-5">
-        <Link href="/dashboard" onClick={onNavigate} aria-label="Open library">
+        <Link href="/dashboard" onClick={navigateToLibrary} aria-label="Open library">
           <AppLogo priority />
         </Link>
       </div>
@@ -36,8 +49,8 @@ export function DashboardSidebarContent({ login, onNavigate, className }: Props)
       <nav className="grid gap-2">
         <CatalogSearchModal triggerVariant="default" triggerClassName="justify-start" onTriggerClick={onNavigate} />
 
-        <Button asChild variant="outline" className="justify-start gap-2" onClick={onNavigate}>
-          <Link href="/dashboard">
+        <Button asChild variant="outline" className="justify-start gap-2">
+          <Link href="/dashboard" onClick={navigateToLibrary}>
             <LibraryBig className="h-4 w-4" />
             Library
           </Link>

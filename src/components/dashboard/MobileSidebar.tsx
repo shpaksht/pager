@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { AppLogo } from "@/components/AppLogo";
 import { DashboardSidebarContent } from "@/components/dashboard/DashboardSidebarContent";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ type Props = {
 
 export function MobileSidebar({ login }: Props) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!open) return;
@@ -33,11 +36,22 @@ export function MobileSidebar({ login }: Props) {
     };
   }, [open]);
 
+  function navigateToLibrary(event: React.MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+
+    if (pathname.startsWith("/dashboard/books/") && window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push("/dashboard");
+  }
+
   return (
     <>
       <div className="sticky top-0 z-30 border-b border-border bg-card/95 px-3 py-2 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between">
-          <Link href="/dashboard" aria-label="Open library">
+          <Link href="/dashboard" onClick={navigateToLibrary} aria-label="Open library">
             <AppLogo className="w-[132px]" priority />
           </Link>
           <Button variant="outline" size="icon" onClick={() => setOpen(true)} aria-label="Open menu">
