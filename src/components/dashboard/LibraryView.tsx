@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ChevronDown, MoreHorizontal, Trash2 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookCover } from "@/components/dashboard/BookCover";
 import { BookFixMatchModal } from "@/components/dashboard/BookFixMatchModal";
@@ -81,6 +81,7 @@ function dateValue(date: string | null | undefined) {
 
 export function LibraryView({ books, wordsPerMinute }: Props) {
   const router = useRouter();
+  const prefetchedBookIdsRef = useRef(new Set<string>());
   const [bookItems, setBookItems] = useState(books);
   const [query, setQuery] = useState("");
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
@@ -167,6 +168,18 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
     () => preparedIds.length > 0 && preparedIds.every((id) => selectedIds.includes(id)),
     [preparedIds, selectedIds]
   );
+
+  const prefetchBook = useCallback((bookId: string) => {
+    if (prefetchedBookIdsRef.current.has(bookId)) return;
+    prefetchedBookIdsRef.current.add(bookId);
+    router.prefetch(`/dashboard/books/${bookId}`);
+  }, [router]);
+
+  useEffect(() => {
+    for (const bookId of preparedIds.slice(0, 20)) {
+      prefetchBook(bookId);
+    }
+  }, [preparedIds, prefetchBook]);
 
   async function deleteOne(bookId: string) {
     setBusy(true);
@@ -440,6 +453,8 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
                     ? "border-primary/70 bg-accent/35"
                     : ""
                 ].join(" ")}
+                onMouseEnter={() => prefetchBook(book.id)}
+                onFocus={() => prefetchBook(book.id)}
                 onClick={(event) => {
                   if (suppressNextCardClick.current) {
                     suppressNextCardClick.current = false;

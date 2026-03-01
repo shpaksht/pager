@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LibraryBig } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
 import { CatalogSearchModal } from "@/components/dashboard/CatalogSearchModal";
@@ -15,6 +17,14 @@ type Props = {
 };
 
 export function DashboardSidebarContent({ login, onNavigate, className }: Props) {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.prefetch("/dashboard");
+    router.prefetch("/dashboard/speed-test");
+    router.prefetch("/dashboard/settings");
+  }, [router]);
+
   return (
     <div className={cn("flex h-full flex-col", className)}>
       <div className="mb-5">
