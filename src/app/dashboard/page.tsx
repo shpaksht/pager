@@ -16,6 +16,8 @@ export default async function DashboardPage() {
         fileName: true,
         wordCount: true,
         estimatedPages: true,
+        rating: true,
+        reviewComment: true,
         plans: {
           select: {
             startDate: true,
@@ -75,6 +77,8 @@ export default async function DashboardPage() {
       fileName: book.fileName,
       wordCount: book.wordCount,
       estimatedPages: book.estimatedPages,
+      rating: book.rating,
+      reviewComment: book.reviewComment,
       progressPercent,
       plan: plan
         ? {

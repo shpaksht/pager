@@ -38,6 +38,8 @@ model Book {
   fileName       String
   wordCount      Int
   estimatedPages Int
+  rating         Int?
+  reviewComment  String?
   coverMime      String?
   coverData      Bytes?
   createdAt      DateTime    @default(now())

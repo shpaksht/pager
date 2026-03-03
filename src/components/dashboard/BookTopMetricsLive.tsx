@@ -11,6 +11,8 @@ type Props = {
   requiredHours: number | null;
   wordsPerMinute: number | null;
   initialReadPercent: number;
+  estimatedEndDate: string | null;
+  finishedAt: string | null;
 };
 
 type ProgressEventPayload = {
@@ -25,10 +27,13 @@ export function BookTopMetricsLive({
   estimatedPages,
   requiredHours,
   wordsPerMinute,
-  initialReadPercent
+  initialReadPercent,
+  estimatedEndDate,
+  finishedAt
 }: Props) {
   const [readPercent, setReadPercent] = useState(initialReadPercent);
   const isInProgress = status === "In Progress";
+  const isCompleted = status === "Completed";
 
   useEffect(() => {
     setReadPercent(initialReadPercent);
@@ -50,6 +55,32 @@ export function BookTopMetricsLive({
     const remainingWords = Math.max(0, wordCount - estimatedReadWords);
     return wordsPerMinute ? estimateReadingHours(remainingWords, wordsPerMinute) : null;
   }, [readPercent, wordCount, wordsPerMinute]);
+
+  const completionInsight = useMemo(() => {
+    if (!isCompleted || !estimatedEndDate || !finishedAt) return null;
+
+    const estimated = new Date(estimatedEndDate);
+    const finished = new Date(finishedAt);
+    estimated.setHours(0, 0, 0, 0);
+    finished.setHours(0, 0, 0, 0);
+
+    const diffDays = Math.round((finished.getTime() - estimated.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) {
+      return "You finished exactly on the estimated date.";
+    }
+
+    if (diffDays < 0) {
+      const days = Math.abs(diffDays);
+      return `You finished ${days} day${days === 1 ? "" : "s"} faster than estimated.`;
+    }
+
+    return `You finished ${diffDays} day${diffDays === 1 ? "" : "s"} later than estimated.`;
+  }, [estimatedEndDate, finishedAt, isCompleted]);
+
+  const completedAtLabel = useMemo(() => {
+    if (!isCompleted || !finishedAt) return null;
+    return new Date(finishedAt).toLocaleDateString("en-US");
+  }, [finishedAt, isCompleted]);
 
   return (
     <div className="space-y-4">
@@ -93,6 +124,16 @@ export function BookTopMetricsLive({
           <div className="h-2 w-full overflow-hidden rounded bg-accent/40">
             <div className="h-full bg-primary transition-all" style={{ width: `${readPercent}%` }} />
           </div>
+        </div>
+      ) : null}
+
+      {isCompleted ? (
+        <div className="space-y-1 rounded-sm border border-border/70 bg-accent/20 px-3 py-2 text-sm">
+          <p>
+            Completed on <strong>{completedAtLabel}</strong>.
+            {requiredHours !== null ? ` Estimated reading time by your speed stats: ~${requiredHours.toFixed(1)} h.` : ""}
+          </p>
+          {completionInsight ? <p>{completionInsight}</p> : null}
         </div>
       ) : null}
     </div>

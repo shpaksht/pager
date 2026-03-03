@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookCover } from "@/components/dashboard/BookCover";
 import { BookFixMatchModal } from "@/components/dashboard/BookFixMatchModal";
+import { RatingStarsDisplay } from "@/components/dashboard/RatingStarsDisplay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -26,6 +27,8 @@ type BookItem = {
   fileName: string;
   wordCount: number;
   estimatedPages: number;
+  rating: number | null;
+  reviewComment: string | null;
   progressPercent: number;
   plan: PlanInfo | null;
 };
@@ -41,6 +44,8 @@ type SortValue =
   | "words_asc"
   | "time_desc"
   | "time_asc"
+  | "rating_desc"
+  | "rating_asc"
   | "start_desc"
   | "start_asc"
   | "finish_desc"
@@ -138,6 +143,8 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
       const bStart = dateValue(b.plan?.startDate);
       const aFinish = dateValue(a.plan?.finishedAt);
       const bFinish = dateValue(b.plan?.finishedAt);
+      const aHasRating = typeof a.rating === "number";
+      const bHasRating = typeof b.rating === "number";
 
       switch (sortBy) {
         case "words_asc":
@@ -148,6 +155,16 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
           return aHours - bHours;
         case "time_desc":
           return bHours - aHours;
+        case "rating_asc":
+          if (!aHasRating && !bHasRating) return 0;
+          if (!aHasRating) return 1;
+          if (!bHasRating) return -1;
+          return (a.rating as number) - (b.rating as number);
+        case "rating_desc":
+          if (!aHasRating && !bHasRating) return 0;
+          if (!aHasRating) return 1;
+          if (!bHasRating) return -1;
+          return (b.rating as number) - (a.rating as number);
         case "start_asc":
           return aStart - bStart;
         case "start_desc":
@@ -390,6 +407,8 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
                 {sortBy === "start_asc" && "Start date: oldest first"}
                 {sortBy === "finish_desc" && "Finish date: newest first"}
                 {sortBy === "finish_asc" && "Finish date: oldest first"}
+                {sortBy === "rating_desc" && "Rating: high to low"}
+                {sortBy === "rating_asc" && "Rating: low to high"}
                 {sortBy === "words_desc" && "Words: high to low"}
                 {sortBy === "words_asc" && "Words: low to high"}
                 {sortBy === "time_desc" && "Estimated time: long to short"}
@@ -403,6 +422,8 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
                 { value: "start_asc", label: "Start date: oldest first" },
                 { value: "finish_desc", label: "Finish date: newest first" },
                 { value: "finish_asc", label: "Finish date: oldest first" },
+                { value: "rating_desc", label: "Rating: high to low" },
+                { value: "rating_asc", label: "Rating: low to high" },
                 { value: "words_desc", label: "Words: high to low" },
                 { value: "words_asc", label: "Words: low to high" },
                 { value: "time_desc", label: "Estimated time: long to short" },
@@ -501,6 +522,26 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
                         </div>
 
                         <div className="ml-2 flex shrink-0 items-center gap-1" data-card-actions-root="true">
+                          {status === "completed" && book.rating ? (
+                            <div
+                              className="rounded-md border border-border/70 bg-card px-1 py-0.5"
+                              onPointerDown={(event) => {
+                                suppressNextCardClick.current = true;
+                                event.stopPropagation();
+                              }}
+                              onMouseDown={(event) => {
+                                suppressNextCardClick.current = true;
+                                event.stopPropagation();
+                              }}
+                              onClick={(event) => {
+                                suppressNextCardClick.current = true;
+                                event.stopPropagation();
+                              }}
+                            >
+                              <RatingStarsDisplay size="sm" value={book.rating} />
+                            </div>
+                          ) : null}
+
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button

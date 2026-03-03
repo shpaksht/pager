@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import { BackToLibraryButton } from "@/components/dashboard/BackToLibraryButton";
 import { BookCover } from "@/components/dashboard/BookCover";
 import { BookChaptersProgress } from "@/components/dashboard/BookChaptersProgress";
 import { DeleteBookButton } from "@/components/dashboard/DeleteBookButton";
 import { BookHeaderActions } from "@/components/dashboard/BookHeaderActions";
+import { BookRatingInline } from "@/components/dashboard/BookRatingInline";
 import { BookReadingControlsInline } from "@/components/dashboard/BookReadingControlsInline";
 import { BookTopMetricsLive } from "@/components/dashboard/BookTopMetricsLive";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +27,8 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
         fileName: true,
         wordCount: true,
         estimatedPages: true,
+        rating: true,
+        reviewComment: true,
         createdAt: true,
         plans: true,
         chapters: {
@@ -69,6 +73,8 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="space-y-5">
+      <BackToLibraryButton />
+
       <Card>
         <CardHeader className="space-y-4">
           <div className="grid gap-6 sm:grid-cols-[148px_minmax(0,1fr)]">
@@ -109,6 +115,8 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
                 requiredHours={requiredHours}
                 wordsPerMinute={latestTest?.wordsPerMin ?? null}
                 initialReadPercent={readPercent}
+                estimatedEndDate={plan?.estimatedEndDate?.toISOString() ?? null}
+                finishedAt={plan?.finishedAt?.toISOString() ?? null}
               />
 
             </div>
@@ -139,6 +147,14 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
           </CardHeader>
         </Card>
       )}
+
+      {status === "Completed" ? (
+        <BookRatingInline
+          bookId={book.id}
+          initialRating={book.rating}
+          initialComment={book.reviewComment}
+        />
+      ) : null}
 
       <Card>
         <CardHeader>

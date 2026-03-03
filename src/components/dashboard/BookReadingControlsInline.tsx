@@ -28,6 +28,7 @@ export function BookReadingControlsInline({
 }: Props) {
   const router = useRouter();
   const [started, setStarted] = useState(hasStarted);
+  const isFinished = Boolean(finishedAt);
   const [startModalOpen, setStartModalOpen] = useState(false);
   const [finishModalOpen, setFinishModalOpen] = useState(false);
   const [startDate, setStartDate] = useState(todayInputDate());
@@ -36,6 +37,10 @@ export function BookReadingControlsInline({
   const [savingStart, setSavingStart] = useState(false);
   const [savingFinish, setSavingFinish] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const finishedAtLabel = useMemo(() => {
+    if (!finishedAt) return null;
+    return new Date(finishedAt).toLocaleDateString("en-US");
+  }, [finishedAt]);
 
   const estimatedEndLabel = useMemo(() => {
     if (!estimatedEnd) return "-";
@@ -101,6 +106,10 @@ export function BookReadingControlsInline({
             Start
           </Button>
         </div>
+      ) : isFinished ? (
+        <p className="text-sm text-muted-foreground">
+          Completed on <strong>{finishedAtLabel}</strong>
+        </p>
       ) : (
         <div className="flex flex-wrap items-end gap-3">
           <Button type="button" onClick={() => setFinishModalOpen(true)}>

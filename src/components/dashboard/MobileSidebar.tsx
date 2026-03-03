@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { MouseEvent, useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -36,7 +36,7 @@ export function MobileSidebar({ login }: Props) {
     };
   }, [open]);
 
-  function navigateToLibrary(event: React.MouseEvent<HTMLAnchorElement>) {
+  function navigateToLibrary(event: MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
 
     if (pathname.startsWith("/dashboard/books/") && window.history.length > 1) {
