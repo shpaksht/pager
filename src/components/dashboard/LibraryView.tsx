@@ -3,6 +3,7 @@
 import { Check, ChevronDown, MoreHorizontal, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AddBookToListModal } from "@/components/dashboard/AddBookToListModal";
 import { BookCover } from "@/components/dashboard/BookCover";
 import { BookFixMatchModal } from "@/components/dashboard/BookFixMatchModal";
 import { RatingStarsDisplay } from "@/components/dashboard/RatingStarsDisplay";
@@ -36,10 +37,12 @@ type BookItem = {
 type Props = {
   books: BookItem[];
   wordsPerMinute: number | null;
+  readingLists: Array<{ id: string; name: string }>;
 };
 
 type Status = "pending" | "in_progress" | "completed";
 type SortValue =
+  | "status_default"
   | "words_desc"
   | "words_asc"
   | "time_desc"
@@ -84,14 +87,20 @@ function dateValue(date: string | null | undefined) {
   return new Date(date).getTime();
 }
 
-export function LibraryView({ books, wordsPerMinute }: Props) {
+function statusSortRank(status: Status) {
+  if (status === "in_progress") return 0;
+  if (status === "pending") return 1;
+  return 2;
+}
+
+export function LibraryView({ books, wordsPerMinute, readingLists }: Props) {
   const router = useRouter();
   const prefetchedBookIdsRef = useRef(new Set<string>());
   const [bookItems, setBookItems] = useState(books);
   const [query, setQuery] = useState("");
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<Status[]>([]);
-  const [sortBy, setSortBy] = useState<SortValue>("start_desc");
+  const [sortBy, setSortBy] = useState<SortValue>("status_default");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -99,6 +108,9 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
   const [matchModalOpen, setMatchModalOpen] = useState(false);
   const [matchBookId, setMatchBookId] = useState<string | null>(null);
   const [matchQuery, setMatchQuery] = useState("");
+  const [addToListOpen, setAddToListOpen] = useState(false);
+  const [addToListBookId, setAddToListBookId] = useState<string | null>(null);
+  const [addToListBookTitle, setAddToListBookTitle] = useState("");
   const suppressNextCardClick = useRef(false);
   const authorOptions = useMemo(() => {
     const unique = new Set<string>();
@@ -137,6 +149,8 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
     });
 
     const sorted = [...filtered].sort((a, b) => {
+      const aStatus = getStatus(a.plan);
+      const bStatus = getStatus(b.plan);
       const aHours = readingHours(a.wordCount, wordsPerMinute) ?? -1;
       const bHours = readingHours(b.wordCount, wordsPerMinute) ?? -1;
       const aStart = dateValue(a.plan?.startDate);
@@ -147,6 +161,11 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
       const bHasRating = typeof b.rating === "number";
 
       switch (sortBy) {
+        case "status_default": {
+          const statusDiff = statusSortRank(aStatus) - statusSortRank(bStatus);
+          if (statusDiff !== 0) return statusDiff;
+          return bStart - aStart;
+        }
         case "words_asc":
           return a.wordCount - b.wordCount;
         case "words_desc":
@@ -236,6 +255,32 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
     setBookItems((prev) => prev.filter((book) => !selectedIds.includes(book.id)));
     setSelectedIds([]);
     setSelectionMode(false);
+    setBusy(false);
+    router.refresh();
+  }
+
+  async function moveToPending(bookId: string) {
+    setBusy(true);
+    setActionError(null);
+
+    const response = await fetch(`/api/books/${bookId}/plan`, { method: "DELETE" });
+    if (!response.ok) {
+      setActionError("Could not move the book to pending");
+      setBusy(false);
+      return;
+    }
+
+    setBookItems((prev) =>
+      prev.map((book) =>
+        book.id === bookId
+          ? {
+              ...book,
+              progressPercent: 0,
+              plan: null
+            }
+          : book
+      )
+    );
     setBusy(false);
     router.refresh();
   }
@@ -403,6 +448,7 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="h-10 justify-between">
+                {sortBy === "status_default" && "Status: active first"}
                 {sortBy === "start_desc" && "Start date: newest first"}
                 {sortBy === "start_asc" && "Start date: oldest first"}
                 {sortBy === "finish_desc" && "Finish date: newest first"}
@@ -418,6 +464,7 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-[280px]" align="start">
               {[
+                { value: "status_default", label: "Status: active first" },
                 { value: "start_desc", label: "Start date: newest first" },
                 { value: "start_asc", label: "Start date: oldest first" },
                 { value: "finish_desc", label: "Finish date: newest first" },
@@ -577,6 +624,26 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
                                 {hasMatchedAuthor(book.title) ? "Fix match" : "Match"}
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                onSelect={() => {
+                                  suppressNextCardClick.current = true;
+                                  setAddToListBookId(book.id);
+                                  setAddToListBookTitle(titleParts.author ? `${titleParts.title} - ${titleParts.author}` : titleParts.title);
+                                  setAddToListOpen(true);
+                                }}
+                              >
+                                Add to list
+                              </DropdownMenuItem>
+                              {status !== "pending" ? (
+                                <DropdownMenuItem
+                                  onSelect={() => {
+                                    suppressNextCardClick.current = true;
+                                    void moveToPending(book.id);
+                                  }}
+                                >
+                                  Move to pending
+                                </DropdownMenuItem>
+                              ) : null}
+                              <DropdownMenuItem
                                 className="text-red-700"
                                 onSelect={() => {
                                   suppressNextCardClick.current = true;
@@ -678,6 +745,13 @@ export function LibraryView({ books, wordsPerMinute }: Props) {
           }
           router.refresh();
         }}
+      />
+      <AddBookToListModal
+        open={addToListOpen}
+        bookId={addToListBookId}
+        bookTitle={addToListBookTitle}
+        lists={readingLists}
+        onClose={() => setAddToListOpen(false)}
       />
     </div>
   );

@@ -98,6 +98,26 @@ export function BookReadingControlsInline({
     router.refresh();
   }
 
+  async function resetToPending() {
+    setError(null);
+    setSavingStart(true);
+
+    const response = await fetch(`/api/books/${bookId}/plan`, { method: "DELETE" });
+    const data = (await response.json().catch(() => ({}))) as { error?: string };
+
+    if (!response.ok) {
+      setError(data.error ?? "Could not move book to pending");
+      setSavingStart(false);
+      return;
+    }
+
+    setStarted(false);
+    setEstimatedEnd(null);
+    setFinishDate(todayInputDate());
+    setSavingStart(false);
+    router.refresh();
+  }
+
   return (
     <div className="space-y-3">
       {!started ? (
@@ -107,13 +127,21 @@ export function BookReadingControlsInline({
           </Button>
         </div>
       ) : isFinished ? (
-        <p className="text-sm text-muted-foreground">
-          Completed on <strong>{finishedAtLabel}</strong>
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-muted-foreground">
+            Completed on <strong>{finishedAtLabel}</strong>
+          </p>
+          <Button type="button" variant="outline" onClick={() => void resetToPending()} disabled={savingStart}>
+            {savingStart ? "Saving..." : "Move to pending"}
+          </Button>
+        </div>
       ) : (
         <div className="flex flex-wrap items-end gap-3">
           <Button type="button" onClick={() => setFinishModalOpen(true)}>
             Finish
+          </Button>
+          <Button type="button" variant="outline" onClick={() => void resetToPending()} disabled={savingStart}>
+            {savingStart ? "Saving..." : "Move to pending"}
           </Button>
           <div className="grid gap-1 text-sm">
             <p className="text-muted-foreground">Estimated Finish Date</p>

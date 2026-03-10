@@ -3,7 +3,7 @@
 import { MouseEvent, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LibraryBig } from "lucide-react";
+import { LibraryBig, ListOrdered } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
 import { CatalogSearchModal } from "@/components/dashboard/CatalogSearchModal";
 import { UserMenu } from "@/components/dashboard/UserMenu";
@@ -22,6 +22,7 @@ export function DashboardSidebarContent({ login, onNavigate, className }: Props)
 
   useEffect(() => {
     router.prefetch("/dashboard");
+    router.prefetch("/dashboard/lists");
     router.prefetch("/dashboard/speed-test");
     router.prefetch("/dashboard/settings");
   }, [router]);
@@ -53,6 +54,13 @@ export function DashboardSidebarContent({ login, onNavigate, className }: Props)
           <Link href="/dashboard" onClick={navigateToLibrary}>
             <LibraryBig className="h-4 w-4" />
             Library
+          </Link>
+        </Button>
+
+        <Button asChild variant="outline" className="justify-start gap-2">
+          <Link href="/dashboard/lists" onClick={() => onNavigate?.()}>
+            <ListOrdered className="h-4 w-4" />
+            Lists
           </Link>
         </Button>
       </nav>

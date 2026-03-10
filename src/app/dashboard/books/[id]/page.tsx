@@ -97,6 +97,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
                       bookTitle={book.title}
                       bookFileName={book.fileName}
                       isMatched={isMatched}
+                      status={status}
                     />
                   </div>
                 </div>
@@ -134,19 +135,19 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
         </CardContent>
       </Card>
 
-      {plan?.startDate ? (
+      {status === "In Progress" ? (
         <BookChaptersProgress
           bookId={book.id}
           chapters={book.chapters}
         />
-      ) : (
+      ) : status === "Pending" ? (
         <Card>
           <CardHeader>
             <CardTitle>Track Your Reading</CardTitle>
             <CardDescription>Press Start above to unlock chapter tracking.</CardDescription>
           </CardHeader>
         </Card>
-      )}
+      ) : null}
 
       {status === "Completed" ? (
         <BookRatingInline

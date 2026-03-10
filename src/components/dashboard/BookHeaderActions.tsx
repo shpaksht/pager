@@ -18,9 +18,10 @@ type Props = {
   bookTitle: string;
   bookFileName: string;
   isMatched: boolean;
+  status?: "Pending" | "In Progress" | "Completed";
 };
 
-export function BookHeaderActions({ bookId, bookTitle, bookFileName, isMatched }: Props) {
+export function BookHeaderActions({ bookId, bookTitle, bookFileName, isMatched, status }: Props) {
   const router = useRouter();
   const [matchOpen, setMatchOpen] = useState(false);
 
@@ -32,6 +33,16 @@ export function BookHeaderActions({ bookId, bookTitle, bookFileName, isMatched }
     if (!response.ok) return;
 
     router.push("/dashboard");
+    router.refresh();
+  }
+
+  async function resetToPending() {
+    const confirmed = window.confirm(`Move "${bookTitle}" back to Pending? Reading progress will be reset to 0%.`);
+    if (!confirmed) return;
+
+    const response = await fetch(`/api/books/${bookId}/plan`, { method: "DELETE" });
+    if (!response.ok) return;
+
     router.refresh();
   }
 
@@ -51,6 +62,15 @@ export function BookHeaderActions({ bookId, bookTitle, bookFileName, isMatched }
           >
             {isMatched ? "Fix match" : "Match"}
           </DropdownMenuItem>
+          {status && status !== "Pending" ? (
+            <DropdownMenuItem
+              onSelect={() => {
+                void resetToPending();
+              }}
+            >
+              Move to pending
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem
             className="text-red-700"
             onSelect={() => {

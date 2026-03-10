@@ -56,24 +56,36 @@ export async function POST(
     return NextResponse.json({ error: "Finish date cannot be earlier than start date" }, { status: 400 });
   }
 
-  const plan = await prisma.readingPlan.upsert({
-    where: { bookId: id },
-    create: {
-      bookId: id,
-      startDate,
-      finishedAt,
-      requiredHours: 0,
-      monHours: 0,
-      tueHours: 0,
-      wedHours: 0,
-      thuHours: 0,
-      friHours: 0,
-      satHours: 0,
-      sunHours: 0
-    },
-    update: {
-      finishedAt
-    }
+  const plan = await prisma.$transaction(async (tx) => {
+    const updatedPlan = await tx.readingPlan.upsert({
+      where: { bookId: id },
+      create: {
+        bookId: id,
+        startDate,
+        finishedAt,
+        requiredHours: 0,
+        monHours: 0,
+        tueHours: 0,
+        wedHours: 0,
+        thuHours: 0,
+        friHours: 0,
+        satHours: 0,
+        sunHours: 0
+      },
+      update: {
+        finishedAt
+      }
+    });
+
+    await tx.bookChapter.updateMany({
+      where: { bookId: id },
+      data: {
+        isRead: true,
+        readAt: finishedAt
+      }
+    });
+
+    return updatedPlan;
   });
 
   const actualDays = daysBetweenInclusive(startDate, finishedAt);

@@ -87,6 +87,7 @@ export async function POST(
     },
     update: {
       startDate,
+      finishedAt: null,
       requiredHours,
       estimatedEndDate: completionDate,
       monHours: schedule.monHours,
@@ -100,4 +101,42 @@ export async function POST(
   });
 
   return NextResponse.json({ plan });
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const book = await prisma.book.findFirst({
+    where: {
+      id,
+      userId: user.id
+    },
+    select: { id: true }
+  });
+
+  if (!book) {
+    return NextResponse.json({ error: "Book not found" }, { status: 404 });
+  }
+
+  await prisma.$transaction([
+    prisma.readingPlan.deleteMany({
+      where: { bookId: id }
+    }),
+    prisma.bookChapter.updateMany({
+      where: { bookId: id },
+      data: {
+        isRead: false,
+        readAt: null
+      }
+    })
+  ]);
+
+  return NextResponse.json({ ok: true });
 }

@@ -7,7 +7,7 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const [books, latestSpeedTest, chapterStats] = await Promise.all([
+  const [books, latestSpeedTest, chapterStats, readingLists] = await Promise.all([
     prisma.book.findMany({
       where: { userId: user.id },
       select: {
@@ -43,7 +43,15 @@ export default async function DashboardPage() {
         WHERE b."userId" = ${user.id}
         GROUP BY bc."bookId", bc."isRead"
       `
-    )
+    ),
+    prisma.readingList.findMany({
+      where: { userId: user.id },
+      orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+      select: {
+        id: true,
+        name: true
+      }
+    })
   ]);
 
   const chapterProgressByBook = new Map<string, { total: number; read: number }>();
@@ -89,5 +97,11 @@ export default async function DashboardPage() {
     };
   });
 
-  return <LibraryView books={normalizedBooks} wordsPerMinute={latestSpeedTest?.wordsPerMin ?? null} />;
+  return (
+    <LibraryView
+      books={normalizedBooks}
+      wordsPerMinute={latestSpeedTest?.wordsPerMin ?? null}
+      readingLists={readingLists}
+    />
+  );
 }

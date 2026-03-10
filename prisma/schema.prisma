@@ -15,6 +15,7 @@ model User {
   createdAt    DateTime           @default(now())
   speedTests   ReadingSpeedTest[]
   books        Book[]
+  readingLists ReadingList[]
   settings     UserSettings?
 }
 
@@ -45,10 +46,41 @@ model Book {
   createdAt      DateTime    @default(now())
   plans          ReadingPlan[]
   chapters       BookChapter[]
+  listEntries    ReadingListBook[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+model ReadingList {
+  id          String            @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  items       ReadingListBook[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model ReadingListBook {
+  id        String      @id @default(cuid())
+  listId    String
+  bookId    String
+  position  Int
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  list ReadingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  book Book        @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, bookId])
+  @@index([listId, position])
+  @@index([bookId])
 }
 
 model BookChapter {
